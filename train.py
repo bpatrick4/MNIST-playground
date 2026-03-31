@@ -1,6 +1,6 @@
 from mnist_data.dataset_utils import train_sets, dataset_inputs
 from models.models import CNN, MLP
-from dashboard.dashboard import DashboardTrainee
+from dashboard.dashboard import DashboardTrain
 
 [X_train, Y_train_raw, 
  X_val_raw, Y_val_raw, 
@@ -11,7 +11,7 @@ train_imgs, val_imgs, _, _ = dataset_inputs
 cnn_model, mlp_model = CNN(), MLP()
 model = cnn_model       # training model
 
-#inputs
+#training inputs
 epochs = 2 ** 3         # range(2, 4)
 batch_size = 2 ** 6     # range(5, 7)
 learning_rate = 0.002   # range(0.001, 0.010)
@@ -19,7 +19,7 @@ drop_prob = 0.000       # range(0.00, 0.35)
 l2_lambda = 0.001       # range(0.001, 0.005)
 
 #optimizer
-optimizer='adam' # sgd | adam
+optimizer='sgd' # sgd | adam
 beta1=0.9
 beta2=0.999
 eps=1e-8
@@ -46,6 +46,6 @@ else:
 model.save(f'weights\weights_{model.type}\e{epochs}bpe{batches_per_epoch}traimgs{train_imgs}valimgs{val_imgs}_weights_{optimizer}.npz')
 
 #graphs
-dashboard = DashboardTrainee(model)
+dashboard = DashboardTrain(model)
 dashboard.plot_training_curves()
 dashboard.plot_all_overlays()

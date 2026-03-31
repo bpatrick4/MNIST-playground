@@ -187,7 +187,6 @@ class Conv2D(Layer):
     for n in range(batch):
       out[n] = W_col @ cols[n] + self.b
 
-
     #reshape to (batch, self.out_channels, out_h, out_w)
     out = out.reshape(batch, self.out_channels, out_h, out_w)
     
@@ -198,46 +197,7 @@ class Conv2D(Layer):
       self.activation = None
 
     return out
-  
-  def backward_old(self, dout, track=False):
-    #dout shape: (batch, out_channels, out_h, out_w)
-    x = self.x
-    batch, in_channels, H, W = x.shape
-    out_channels, _, k, _ = self.W.shape
-    _, _, out_h, out_w = dout.shape
-    k = self.kernel_size
-
-    #init gradients
-    dW = np.zeros_like(self.W)
-    db = np.zeros_like(self.b)
-    dx = np.zeros_like(x)
-
-    #compute gradients
-    for n in range(batch):
-      for f in range(out_channels):
-        for i in range(out_h):
-          for j in range(out_w):
-            #gradient for bias
-            db[f] += dout[n, f, i, j]
-
-            #region of input that contributed to this output
-            region = x[n, :, i:i+k, j:j+k]
-
-            #gradient for weights 
-            dW[f] += region * dout[n, f, i, j]
-
-            #gradient for input
-            dx[n, :, i:i+k, j:j+k] += self.W[f] * dout[n, f, i, j]
     
-    #save gradients
-    self.dW = dW
-    self.db = db
-
-    if track:
-      self.last_dout = dout
-
-    return dx
-  
   def backward(self, dout, track=False):
     x = self.x
     batch, in_channels, H, W = x.shape
@@ -400,7 +360,6 @@ class BatchNorm2D(Layer):
   
   def get_metrics(self):
     return {}
-
 
 class MaxPool2D(Layer):
   is_visualizable = True
