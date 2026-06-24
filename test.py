@@ -15,7 +15,9 @@ tester = Tester(test_model, test_sets)
 dashboard = DashboardTest(tester)
 
 #load model weights
-test_model.load(f'weights\weights_cnn\e8bpe750.0traimgs48000valimgs12000_weights_adam.npz')
+#test_model.load(f'weights\weights_cnn\e8\weights_bpe256.0_sgd_train16384_validate2048.npz')
+
+test_model.load(f'weights\weights_cnn_ft\e4\weights_bpe4.0_sgd_train256_validate256.npz')
 
 #test on stored weights
 if test_model.type == 'cnn':

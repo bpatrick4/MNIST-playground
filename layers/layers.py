@@ -285,7 +285,7 @@ class Conv2D(Layer):
       "grad_norm": np.linalg.norm(self.dW) if hasattr(self, "dW") else 0.0,
     } 
 
-class BatchNorm2D(Layer):
+class BatchNorm2D(Layer): #needs work
   def __init__(self, num_features, eps=1e-5, momentum=0.9):
     self.num_features = num_features
     self.eps = eps
@@ -299,7 +299,7 @@ class BatchNorm2D(Layer):
     self.running_mean = np.zeros((1, num_features, 1, 1))
     self.running_var = np.ones((1, num_features, 1, 1))
 
-  def forward(self, x, track=False):
+  def forward(self, x, track=True):
     self.x = x
     if track: #training mode
       mean = np.mean(x, axis=(0,2,3), keepdims=True)
@@ -333,7 +333,7 @@ class BatchNorm2D(Layer):
 
     #gradients of gamma and beta
     dgamma = np.sum(dout * x_hat, axis=(0,2,3), keepdims=True)
-    dbeta = np.sum(dout * x_hat, axis=(0,2,3), keepdims=True)
+    dbeta = np.sum(dout, axis=(0,2,3), keepdims=True)
 
     self.dgamma = dgamma
     self.dbeta = dbeta
@@ -345,9 +345,14 @@ class BatchNorm2D(Layer):
     dmean = np.sum(dx_hat * -1 / np.sqrt(var + eps), axis=(0,2,3), keepdims=True) + dvar * np.sum(-2 * (self.x - mean), axis=(0,2,3), keepdims=True) / N
 
     dx = dx_hat / np.sqrt(var + eps) + dvar * 2 * (self.x - mean) / N + dmean
+    print("mean:", np.mean(self.mean))
+    print("var:", np.mean(self.var))
+    print("gamma:", np.mean(self.gamma))
+    print("beta:", np.mean(self.beta))
+    print("xhat max:", np.max(x_hat))
+    print("dout max:", np.max(dout))
 
     return dx
-  
   
   def set_params(self, params):
     self.gamma, self.beta = params

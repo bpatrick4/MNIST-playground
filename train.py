@@ -14,9 +14,9 @@ model = cnn_model       # training model
 #training inputs
 epochs = 2 ** 3         # range(2, 4)
 batch_size = 2 ** 6     # range(5, 7)
-learning_rate = 0.002   # range(0.001, 0.010)
+learning_rate = 0.004   # range(0.001, 0.010)
 drop_prob = 0.000       # range(0.00, 0.35)
-l2_lambda = 0.001       # range(0.001, 0.005)
+l2_lambda = 0.003       # range(0.001, 0.005)
 
 #optimizer
 optimizer='sgd' # sgd | adam
@@ -43,7 +43,7 @@ else:
   print(f'{model.type} not available')   
 
 #save model weights
-model.save(f'weights\weights_{model.type}\e{epochs}bpe{batches_per_epoch}traimgs{train_imgs}valimgs{val_imgs}_weights_{optimizer}.npz')
+model.save(f'weights\weights_{model.type}\e{epochs}\weights_bpe{batches_per_epoch}_{optimizer}_train{train_imgs}_validate{val_imgs}.npz')
 
 #graphs
 dashboard = DashboardTrain(model)

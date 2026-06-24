@@ -1,5 +1,5 @@
 import numpy as np
-from layers.layers import Conv2D, BatchNorm2D, MaxPool2D, Flatten, Dense, ReLU, SoftmaxCrossEntropy
+from layers.layers import Conv2D, MaxPool2D, Flatten, Dense, ReLU, SoftmaxCrossEntropy # BatchNorm2D
 from trainer.trainer import Train
 
 class Model:
@@ -131,20 +131,21 @@ class CNN(Model, Train):
     self.type = 'cnn'
     self.c1out = 16
     self.c2out = 32
+    self.densesq = 7 # (c1,c2,densesq) (8,16,5) (16,32,7)
 
     self.layers = [
       Conv2D(1, self.c1out, 3, stride=1, padding=1), 
-      BatchNorm2D(self.c1out),
+      #BatchNorm2D(self.c1out),
       ReLU(),
       MaxPool2D(2, 2),
 
       Conv2D(self.c1out, self.c2out, 3, stride=1, padding=1),
-      BatchNorm2D(self.c2out),
+      #BatchNorm2D(self.c2out),
       ReLU(),
       MaxPool2D(2, 2),
 
       Flatten(),
-      Dense(self.c2out*7*7, 64),
+      Dense(self.c2out*self.densesq*self.densesq, 64),
       ReLU(),
       Dense(64, 10)
     ]
