@@ -328,7 +328,6 @@ class BatchNorm2D(Layer): #needs work
 
     x_hat = self.x_hat
     var = self.var
-    mean = self.mean
     eps = self.eps
 
     #gradients of gamma and beta
@@ -341,16 +340,24 @@ class BatchNorm2D(Layer): #needs work
     #gradient wrt x
     dx_hat = dout * self.gamma
 
-    dvar = np.sum(dx_hat * (self.x - mean) * -0.5 * (var + eps)**(-3/2), axis=(0,2,3), keepdims=True)
-    dmean = np.sum(dx_hat * -1 / np.sqrt(var + eps), axis=(0,2,3), keepdims=True) + dvar * np.sum(-2 * (self.x - mean), axis=(0,2,3), keepdims=True) / N
+    sum_dx_hat = np.sum(dx_hat, axis=(0,2,3), keepdims=True)
+    sum_dx_hat_xhat = np.sum(dx_hat * x_hat, axis=(0,2,3), keepdims=True)
 
-    dx = dx_hat / np.sqrt(var + eps) + dvar * 2 * (self.x - mean) / N + dmean
-    print("mean:", np.mean(self.mean))
-    print("var:", np.mean(self.var))
-    print("gamma:", np.mean(self.gamma))
-    print("beta:", np.mean(self.beta))
-    print("xhat max:", np.max(x_hat))
-    print("dout max:", np.max(dout))
+    denom = np.sqrt(var + eps)
+
+    dx = (1.0 / (N * denom)) * (
+      N * dx_hat
+      - sum_dx_hat
+      - x_hat * sum_dx_hat_xhat
+    )
+
+    print(f'mean: {np.mean(self.mean):.2f} | '
+          f'var: {np.mean(self.var):.2f} | '
+          f'gamma: {np.mean(self.gamma):.2f} | '
+          f'beta: {np.mean(self.beta):.2f} | '
+          f'xhat max: {np.max(x_hat):.2f} | '
+          f'dout max: {np.max(dout):.2f}'
+          )
 
     return dx
   

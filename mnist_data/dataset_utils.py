@@ -2,8 +2,8 @@ from mnist_data.mnist_utils import Mnist
 import random
 
 #set dataset inputs
-num_of_train_imgs = 2 ** 8 # range(12, 15)
-num_of_val_imgs = 2 ** 8 # range(10, 15)
+num_of_train_imgs = 2 ** 14 # range(12, 15)
+num_of_val_imgs = 2 ** 10 # range(10, 13)
 num_of_test_imgs = 10000 # 8192
 n =  random.randint(0,9999)
 #n = 4443

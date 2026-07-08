@@ -170,7 +170,7 @@ class Train:
             self.history["layers"][name][k].append(v)
     
         batch_tracker += 1
-        print(f'Batch: {batch_tracker}')
+        print(f'Batch: {batch_tracker}\n')
       
       return np.mean(batch_losses), np.mean(batch_accs)
     
@@ -198,7 +198,7 @@ class Train:
               f'loss: {train_loss:.4f} | '
               f'acc: {train_acc:.4f} | '
               f'val_loss: {val_loss:.4f} | '
-              f'val_acc: {val_acc:.4f}'
+              f'val_acc: {val_acc:.4f}\n'
               )
 
     def train_validate_2(self, epochs, trainer, X_train, Y_train_onehot, X_val_raw1, Y_val_onehot1, X_val_raw2, Y_val_onehot2):

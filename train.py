@@ -12,7 +12,7 @@ cnn_model, mlp_model = CNN(), MLP()
 model = cnn_model       # training model
 
 #training inputs
-epochs = 2 ** 3         # range(2, 4)
+epochs = 2 ** 1         # range(2, 4)
 batch_size = 2 ** 6     # range(5, 7)
 learning_rate = 0.004   # range(0.001, 0.010)
 drop_prob = 0.000       # range(0.00, 0.35)
