@@ -285,7 +285,7 @@ class Conv2D(Layer):
       "grad_norm": np.linalg.norm(self.dW) if hasattr(self, "dW") else 0.0,
     } 
 
-class BatchNorm2D(Layer): #needs work
+class BatchNorm2D(Layer): 
   def __init__(self, num_features, eps=1e-5, momentum=0.9):
     self.num_features = num_features
     self.eps = eps

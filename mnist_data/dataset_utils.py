@@ -2,9 +2,9 @@ from mnist_data.mnist_utils import Mnist
 import random
 
 #set dataset inputs
-num_of_train_imgs = 2 ** 14 # range(12, 15)
-num_of_val_imgs = 2 ** 10 # range(10, 13)
-num_of_test_imgs = 10000 # 8192
+num_of_train_imgs = 54000 #2 ** 14 # range(12, 15)
+num_of_val_imgs = 6000 #2 ** 4 # range(10, 13)
+num_of_test_imgs = 100 # 8192
 n =  random.randint(0,9999)
 #n = 4443
 
@@ -20,10 +20,10 @@ X_train_raw, Y_train_raw = Mnist.load_mnist(path, kind='train')
 X_test_raw, Y_test_raw = Mnist.load_mnist(path, kind='t10k')
 
 #curated datasets
-X_train, Y_train, X_val_raw, Y_val_raw = Mnist.get_val_set(X_train_raw, Y_train_raw, train_ratio) #split train set into train/val
-X_val_raw1, Y_val_raw1, X_val_raw2, Y_val_raw2 = Mnist.get_val_set(X_val_raw, Y_val_raw, val_ratio) #split val set for quicker CNN training
+X_train, Y_train, X_val_raw, Y_val_raw = Mnist.get_val_set(X_train_raw, Y_train_raw, train_ratio) #split train set into train/val | num_of_train_imgs
+X_val_raw1, Y_val_raw1, X_val_raw2, Y_val_raw2 = Mnist.get_val_set(X_val_raw, Y_val_raw, val_ratio) #split val set for quicker CNN training | num_of_val_imgs
 
-X_test_small_raw, Y_test_small_raw = X_test_raw[0:num_of_test_imgs], Y_test_raw[0:num_of_test_imgs] #split test set for quicker CNN testing
+X_test_small_raw, Y_test_small_raw = X_test_raw[0:num_of_test_imgs], Y_test_raw[0:num_of_test_imgs] #split test set for quicker CNN testing | num_of_test_imgs
 x_single_raw = X_test_raw[n:n+1] #pick an image for visualization
 
 #one-hot encode labels
@@ -44,15 +44,25 @@ X_test_cnn = X_test_raw.reshape(-1, 1, 28, 28)
 X_test_small_cnn = X_test_small_raw.reshape(-1, 1, 28, 28)
 x_single_cnn = x_single_raw.reshape(-1, 1, 28, 28)
 
-train_sets = [X_train, Y_train, 
-         X_val_raw, Y_val_raw, 
-         X_val_raw1, Y_val_raw1, X_val_raw2, Y_val_raw2, 
-         Y_train_onehot, Y_val_onehot, Y_val_onehot1, Y_val_onehot2, 
-         X_train_cnn, X_val_cnn1, X_val_cnn2]
+#training sets
+train_sets_cnn = [X_train_cnn, Y_train_onehot, X_val_cnn1, Y_val_onehot1]
+train_sets_mlp = [X_train, X_val_raw, Y_train_onehot, Y_val_onehot]
 
-test_sets = [X_test_raw, Y_test_raw, 
-        X_test_small_raw, Y_test_small_raw, x_single_raw, 
-        Y_test_onehot, Y_test_small_onehot, 
-        X_test_cnn, X_test_small_cnn, x_single_cnn]
+#testing sets
+test_sets_cnn = [X_test_small_cnn, Y_test_small_raw, x_single_cnn, Y_test_small_onehot]
+test_sets_mlp = [X_test_raw, Y_test_raw, x_single_raw, Y_test_onehot]
 
 dataset_inputs = [num_of_train_imgs, num_of_val_imgs, num_of_test_imgs, n]
+
+
+#unused sets
+train_sets = [X_train, Y_train,
+              X_val_raw, Y_val_raw,
+              X_val_raw1, Y_val_raw1, X_val_raw2, Y_val_raw2,
+              Y_train_onehot, Y_val_onehot, Y_val_onehot1, Y_val_onehot2,
+              X_train_cnn, X_val_cnn1, X_val_cnn2]
+
+test_sets = [X_test_raw, Y_test_raw,
+             X_test_small_raw, Y_test_small_raw, x_single_raw,
+             Y_test_onehot, Y_test_small_onehot,
+             X_test_cnn, X_test_small_cnn, x_single_cnn]

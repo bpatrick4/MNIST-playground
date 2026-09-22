@@ -64,3 +64,4 @@ class Mnist:
     preds = np.argmax(logits, axis=1)
     true = np.argmax(y_onehot, axis=1)
     return np.mean(preds == true)
+
