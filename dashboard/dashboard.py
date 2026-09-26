@@ -20,7 +20,6 @@ class DashboardTrain:
     plt.subplot(2,1,1)
     plt.plot(hist["loss"], label='train loss')
     plt.plot(hist["val_loss1"], label='val loss1')
-    plt.plot(hist["val_loss2"], label='val loss2')
     plt.title("Loss")
     plt.legend()
 
@@ -28,7 +27,6 @@ class DashboardTrain:
     plt.subplot(2,1,2)
     plt.plot(hist["acc"], label='train acc')
     plt.plot(hist["val_acc1"], label='val acc1')
-    plt.plot(hist["val_acc2"], label='val acc2')
     plt.title("Accuracy")
     plt.legend()
 
@@ -121,9 +119,8 @@ class DashboardTrain:
      self.plot_weight_norm_overlays()
        
 class DashboardTest:
-  def __init__(self, tester):
-    self.tester = tester
-    self.model = tester.model
+  def __init__(self, model):
+    self.model = model
   
   def plot_test_confusion(self, X, y_true):
     #confusion matrix

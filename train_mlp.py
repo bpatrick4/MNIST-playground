@@ -1,4 +1,4 @@
-from mnist_data.dataset_utils import train_sets_mlp, dataset_inputs
+from utils.dataset_utils import train_sets_mlp, dataset_inputs
 from models.models import MLP
 from dashboard.dashboard import DashboardTrain
 
@@ -7,14 +7,14 @@ train_imgs, val_imgs, _, _ = dataset_inputs
 model = MLP() # training model
 
 #training inputs
-epochs = 2 ** 3         # range(2, 4)
+epochs = 2 ** 5         # range(2, 4)
 batch_size = 2 ** 6     # range(5, 9) number of images per update
-learning_rate = 0.001   # range(0.001, 0.010)
+learning_rate = 0.002   # range(0.001, 0.010)
 drop_prob = 0.000       # range(0.00, 0.35)
 l2_lambda = 0.003       # range(0.001, 0.005)
 
 #optimizer inputs
-optimizer='adam' # sgd | adam
+optimizer='sgd' # sgd | adam
 beta1=0.9
 beta2=0.999
 eps=1e-8
@@ -31,7 +31,7 @@ model.train_validate(X_train, Y_train_onehot, X_val_raw, Y_val_onehot,
 
 #save model weights
 model.save(f'weights\weights_{model.type}'
-           f'\e{epochs}\{batches_per_epoch}bpe'
+           f'\e{epochs}\_{batches_per_epoch}bpe'
            f'_lr-{learning_rate}_{optimizer}'
            f'_t-{train_imgs}_v-{val_imgs}.npz')
 

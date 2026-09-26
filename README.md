@@ -9,10 +9,10 @@ make your own sized datasets with:
 located in mnist_data\dataset_utils.py
 
 ### training
-train.py allows you to train a model and save the weights for later testing.
+train_.py allows you to train a model and save the weights for later testing.
 
 ### finetuning
-finetune.py allows you to finetune a model.
+finetune_.py allows you to finetune a model.
 
 ### testing
-test.py allows you to test on saved model weights, along with some helpful graphs.
+test_.py allows you to test on saved model weights, along with some helpful graphs.

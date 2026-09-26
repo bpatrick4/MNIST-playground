@@ -1,6 +1,6 @@
 import numpy as np
 from layers.layers import Conv2D, BatchNorm2D, MaxPool2D, Flatten, Dense, ReLU, SoftmaxCrossEntropy
-from mnist_data.mnist_utils import Mnist
+from utils.mnist_utils import Mnist
 
 # main classes      
 class Model:
@@ -175,34 +175,6 @@ class Train:
               f'val_loss2: {val_loss2:.4f} | '
               f'val_acc2: {val_acc2:.4f}'
               )
-
-class Tester_mlp:
-  def __init__(self, model, test_sets):
-    self.model = model
-    self.type = self.model.type
-    
-    self.X_test_raw = test_sets[0]
-    self.Y_test_raw = test_sets[1]
-    self.x_single_raw = test_sets[2]
-    self.Y_test_onehot = test_sets[3]
-   
-  def run_test(self, X, y_true):
-    #validate for accuracy
-    return self.model.validate(X, y_true)[1]
-
-class Tester_cnn:
-  def __init__(self, model, test_sets):
-    self.model = model
-    self.type = self.model.type
-    
-    self.X_test_small_cnn = test_sets[0]
-    self.Y_test_small_raw = test_sets[1]
-    self.x_single_cnn = test_sets[2]
-    self.Y_test_small_onehot = test_sets[3]
-   
-  def run_test(self, X, y_true):
-    #validate for accuracy
-    return self.model.validate(X, y_true)[1]
 
 # model classes
 class MLP(Model, Train):

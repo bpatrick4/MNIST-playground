@@ -1,10 +1,10 @@
-from mnist_data.mnist_utils import Mnist
+from utils.mnist_utils import Mnist
 import random
 
 #set dataset inputs
-num_of_train_imgs = 54000 #2 ** 14 # range(12, 15)
-num_of_val_imgs = 6000 #2 ** 4 # range(10, 13)
-num_of_test_imgs = 100 # 8192
+num_of_train_imgs = 32000 #2 ** 14 # range(12, 15)
+num_of_val_imgs = 10000 #2 ** 4 # range(10, 13)
+num_of_test_imgs = 10000 # 8192
 n =  random.randint(0,9999)
 #n = 4443
 
@@ -13,7 +13,7 @@ train_ratio = 1 - (num_of_train_imgs / 60000)
 val_ratio = 1 - (num_of_val_imgs / 60000)
 
 #load mnist dataset
-path = 'mnist_data' #download mnist dataset to this folder
+path = 'utils' #download mnist dataset to this folder
 
 #raw datasets
 X_train_raw, Y_train_raw = Mnist.load_mnist(path, kind='train')
