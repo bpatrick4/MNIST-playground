@@ -8,25 +8,26 @@ def confusion_matrix(y_true, y_pred, num_classes=10):
     return matrix
 
 class DashboardTrain:
-  def __init__(self, model):
-    self.model = model
+  def __init__(self, trainer):
+    self.trainer = trainer
+    print([layer.__class__.__name__ for layer in trainer.model.get_layers()])
 
   def plot_training_curves(self):
-    hist = self.model.history
+    hist = self.trainer.history
 
     plt.figure(figsize=(12,5))
 
     #loss
     plt.subplot(2,1,1)
     plt.plot(hist["loss"], label='train loss')
-    plt.plot(hist["val_loss1"], label='val loss1')
+    plt.plot(hist["val_loss"], label='val loss')
     plt.title("Loss")
     plt.legend()
 
     #accuracy
     plt.subplot(2,1,2)
     plt.plot(hist["acc"], label='train acc')
-    plt.plot(hist["val_acc1"], label='val acc1')
+    plt.plot(hist["val_acc"], label='val acc')
     plt.title("Accuracy")
     plt.legend()
 
@@ -62,7 +63,7 @@ class DashboardTrain:
       plt.show()
 
   def plot_grad_norm_overlays(self):
-     layer_hist = self.model.history['layers']
+     layer_hist = self.trainer.history['layers']
 
      plt.figure(figsize=(10, 6))
 
@@ -80,7 +81,7 @@ class DashboardTrain:
      plt.show()
   
   def plot_sparsity_overlays(self):
-     layer_hist = self.model.history['layers']
+     layer_hist = self.trainer.history['layers']
 
      plt.figure(figsize=(10, 6))
 
@@ -97,7 +98,7 @@ class DashboardTrain:
      plt.show()
 
   def plot_weight_norm_overlays(self):
-     layer_hist = self.model.history['layers']
+     layer_hist = self.trainer.history['layers']
 
      plt.figure(figsize=(10, 6))
 

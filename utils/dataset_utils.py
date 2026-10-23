@@ -2,9 +2,9 @@ from utils.mnist_utils import Mnist
 import random
 
 #set dataset inputs
-num_of_train_imgs = 32000 #2 ** 14 # range(12, 15)
-num_of_val_imgs = 10000 #2 ** 4 # range(10, 13)
-num_of_test_imgs = 10000 # 8192
+num_of_train_imgs = 5400 #2 ** 14 # range(12, 15)
+num_of_val_imgs = 600 #2 ** 4 # range(10, 13)
+num_of_test_imgs = 1000 # 8192
 n =  random.randint(0,9999)
 #n = 4443
 
@@ -53,16 +53,3 @@ test_sets_cnn = [X_test_small_cnn, Y_test_small_raw, x_single_cnn, Y_test_small_
 test_sets_mlp = [X_test_raw, Y_test_raw, x_single_raw, Y_test_onehot]
 
 dataset_inputs = [num_of_train_imgs, num_of_val_imgs, num_of_test_imgs, n]
-
-
-#unused sets
-train_sets = [X_train, Y_train,
-              X_val_raw, Y_val_raw,
-              X_val_raw1, Y_val_raw1, X_val_raw2, Y_val_raw2,
-              Y_train_onehot, Y_val_onehot, Y_val_onehot1, Y_val_onehot2,
-              X_train_cnn, X_val_cnn1, X_val_cnn2]
-
-test_sets = [X_test_raw, Y_test_raw,
-             X_test_small_raw, Y_test_small_raw, x_single_raw,
-             Y_test_onehot, Y_test_small_onehot,
-             X_test_cnn, X_test_small_cnn, x_single_cnn]

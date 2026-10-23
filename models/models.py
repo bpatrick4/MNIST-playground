@@ -1,20 +1,46 @@
 import numpy as np
-from layers.layers import Conv2D, BatchNorm2D, MaxPool2D, Flatten, Dense, ReLU, SoftmaxCrossEntropy
+from layers.layers import Conv2D, BatchNorm2D, MaxPool2D, Flatten, Dense, ReLU, Dropout, SoftmaxCrossEntropy
 from utils.mnist_utils import Mnist
 
 # main classes      
 class Model:
-  def forward(self, x, y=None, track=False):
-    raise NotImplementedError
-  
-  def backward(self, track=False):
-    raise NotImplementedError
-  
-  def predict(self, x):
-    raise NotImplementedError
-  
+  def __init__(self, layers):
+    self.layers = layers
+    self.training = True
+    self.history = {
+      "loss": [],
+      "acc": [],
+      "val_loss": [],
+      "val_acc": [],
+      "layers": {},
+    }
+
+  def train(self):
+    self.training = True
+
+  def eval(self):
+      self.training = False
+
+  def forward(self, X, Y=None):
+    out = X
+    for layer in self.layers:
+      out = layer.forward(out, track=self.training)
+    logits = out
+
+    if Y is None:
+      return logits
+
+    # your loss function
+    loss = self.loss_fn(logits, Y)
+    return loss, logits
+
+  def backward(self):
+    grad = self.loss_grad  # whatever your loss gradient is
+    for layer in reversed(self.layers):
+      grad = layer.backward(grad, track=self.training)
+
   def get_layers(self):
-    raise NotImplementedError
+   return self.layers
   
   def save(self, path):
     #save all parameters to a .npz file
@@ -49,101 +75,81 @@ class Model:
       layer.set_params(layer_params)
     print(f'loaded model weights from {path}')
   
-class Train:
-    def printout(self, epochs, batches_per_epoch, train_imgs, val_imgs):
-      #training stats
-      print(f'epochs: {epochs} | '
-      f'batches per epoch: {batches_per_epoch} | '
-      f'total batches: {batches_per_epoch * epochs} | '
-      f'images used in training run: {train_imgs} | '
-      f'images used in val set: {val_imgs}')
+class Trainer:
+  def __init__(self, model, optimizer, l2_lambda=0.0):
+    self.model = model
+    self.optimizer = optimizer
+    self.l2_lambda = l2_lambda
+    self.epoch_tracker = 1
+    self.batch_tracker = 0
+    self.history = {
+          "loss": [],
+          "acc": [],
+          "val_loss": [],
+          "val_acc": [],
+          "layers": {},
+        }
 
-    def train_epoch(self, X, Y, optimizer, lr, batch_size, l2_lambda=0.0, beta1=0.9, beta2=0.999, eps=1e-8):
-      batch_losses = []
-      batch_accs = []
-      batch_tracker = 0
-      t = 0
-        
-      for Xb, Yb in Mnist.get_batches(X, Y, batch_size):
-        loss, logits, activations = self.forward(Xb, Yb, track=True)
-        self.backward(track=True)
+  def train_epoch(self, X, Y, batch_size):
+    self.model.train()
+    batch_losses = []
+    batch_accs = []
 
-        #L2 loss
-        l2_loss = 0.0
-        for layer in self.get_layers():
-          for W in layer.get_params():
-            l2_loss += np.sum(W * W)
-        loss_total = loss + l2_lambda * l2_loss
+    for Xb, Yb in Mnist.get_batches(X, Y, batch_size):
+      loss, logits, activations = self.model.forward(Xb, Yb)
+      self.model.backward()
 
-        if optimizer == 'sgd':
-          #SGD update
-          for layer in self.get_layers():
-            for p, g in zip(layer.get_params(), layer.get_grads()):
-              p -= lr * g
-        elif optimizer == 'adam':
-          #Adam update
-          t += 1
-          for layer in self.get_layers():
-            params = layer.get_params()
-            grads = layer.get_grads()
+      #L2 loss
+      l2_loss = 0.0
+      for layer in self.model.get_layers():
+        for W in layer.get_params():
+          l2_loss += np.sum(W * W)
+      loss_total = loss + self.l2_lambda * l2_loss
 
-            if not hasattr(layer, 'm'):
-              layer.init_optimizer_state()
-            
-            for i, (p, g) in enumerate(zip(params, grads)):
-              #update biased first moment estimate
-              layer.m[i] = beta1 * layer.m[i] + (1 - beta1) * g
+      self.optimizer.step(self.model.get_layers())
 
-              #update biased second raw moment estimate
-              layer.v[i] = beta2 * layer.v[i] + (1 - beta2) * (g * g)
+      batch_losses.append(loss_total)
+      batch_accs.append(Mnist.accuracy_from_logits(logits, Yb))
 
-              #compute bias-corrected moments
-              m_hat = layer.m[i] / (1 - beta1 ** t)
-              v_hat = layer.v[i] / (1 - beta2 ** t)
+      #collect layer metrics
+      for i, layer in enumerate(self.model.get_layers()):
+        name = f'layer_{i}_{layer.__class__.__name__}'
+        if name not in self.history["layers"]:
+          self.history["layers"][name] = {
+            "weight_norm": [],
+            "grad_norm": [],
+            "sparsity": []
+          }
+        metrics = layer.get_metrics()
+        for k, v in metrics.items():
+          self.history["layers"][name][k].append(v)
 
-              #update parameters
-              p -= lr * m_hat / (np.sqrt(v_hat) + eps)
+      self.batch_tracker += 1
+      print(f'Epoch: {self.epoch_tracker} | Batch: {self.batch_tracker}\n')
 
-        batch_losses.append(loss_total)
-        batch_accs.append(Mnist.accuracy_from_logits(logits, Yb))
+    self.epoch_tracker += 1
 
-        #collect layer metrics
-        for i, layer in enumerate(self.get_layers()):
-          name = f'layer_{i}_{layer.__class__.__name__}'
-          if name not in self.history["layers"]:
-            self.history["layers"][name] = {
-              "weight_norm": [],
-              "grad_norm": [],
-              "sparsity": []
-            }
-          metrics = layer.get_metrics()
-          for k, v in metrics.items():
-            self.history["layers"][name][k].append(v)
-    
-        batch_tracker += 1
-        print(f'Batch: {batch_tracker}\n')
-      
-      return np.mean(batch_losses), np.mean(batch_accs)
-    
-    def validate(self, X, Y):
-      loss, logits = self.forward(X, Y, track=False)
-      acc = Mnist.accuracy_from_logits(logits, Y)
-      #print('test set accuracy:', acc)
-      return loss, acc
+    return np.mean(batch_losses), np.mean(batch_accs)
 
-    def train_validate(self,
-                      X_train, Y_train_onehot, X_val_raw, Y_val_onehot, 
-                      epochs, optimizer, lr, batch_size, l2_lambda=0.0, 
-                      beta1=0.9, beta2=0.999, eps=1e-8):
+  def validate(self, X, Y):
+    self.model.eval()
+    loss, logits = self.model.forward(X, Y)
+    acc = Mnist.accuracy_from_logits(logits, Y)
+    return loss, acc
+
+  def train_validate(self,
+                      X_train, Y_train_onehot, 
+                      X_val_raw, Y_val_onehot, 
+                      epochs, batch_size):
       print('Training...')
       for epoch in range(epochs):
-        train_loss, train_acc = self.train_epoch(X_train, Y_train_onehot, optimizer, lr, batch_size, l2_lambda, beta1, beta2, eps)
+        train_loss, train_acc = self.train_epoch(X_train, Y_train_onehot, batch_size)
         val_loss, val_acc = self.validate(X_val_raw, Y_val_onehot)
 
         self.history["loss"].append(train_loss)
         self.history["acc"].append(train_acc)
-        self.history["val_loss1"].append(val_loss)
-        self.history["val_acc1"].append(val_acc)
+        self.history["val_loss"].append(val_loss)
+        self.history["val_acc"].append(val_acc)
 
         print(f'Epoch {epoch+1} | ' 
               f'loss: {train_loss:.4f} | '
@@ -152,47 +158,32 @@ class Train:
               f'val_acc: {val_acc:.4f}\n'
               )
 
-    def train_validate_2(self, epochs, trainer, X_train, Y_train_onehot, X_val_raw1, Y_val_onehot1, X_val_raw2, Y_val_onehot2):
-      print('Training...')
-      for epoch in range(epochs):
-        train_loss, train_acc = trainer.train_epoch(X_train, Y_train_onehot)
-        val_loss1, val_acc1 = self.validate(X_val_raw1, Y_val_onehot1)
-        val_loss2, val_acc2 = self.validate(X_val_raw2, Y_val_onehot2)
-
-
-        trainer.history["loss"].append(train_loss)
-        trainer.history["acc"].append(train_acc)
-        trainer.history["val_loss1"].append(val_loss1)
-        trainer.history["val_acc1"].append(val_acc1)
-        trainer.history["val_loss2"].append(val_loss2)
-        trainer.history["val_acc2"].append(val_acc2)
-
-        print(f'Epoch {epoch+1} | ' 
-              f'loss: {train_loss:.4f} | '
-              f'acc: {train_acc:.4f} | '
-              f'val_loss1: {val_loss1:.4f} | '
-              f'val_acc1: {val_acc1:.4f} | '
-              f'val_loss2: {val_loss2:.4f} | '
-              f'val_acc2: {val_acc2:.4f}'
-              )
-
+  def printout(self, epochs, batches_per_epoch, train_imgs, val_imgs):
+      #training stats
+      print(f'epochs: {epochs} | '
+        f'batches per epoch: {batches_per_epoch} | '
+        f'total batches: {batches_per_epoch * epochs} | '
+        f'images used in training run: {train_imgs} | '
+        f'images used in val set: {val_imgs}')
+  
 # model classes
-class MLP(Model, Train):
+class MLP(Model):
   #[784(28x28 input image), n..., 10(0-9 classification)]
   def __init__(self):
+    #super().__init__()
+
     self.type = 'mlp'
     self.input_dim = 784
     self.h1_dim = 64
     self.h2_dim = 32
     self.h3_dim = 16 
     self.output_dim = 10
+
     self.history = {
         "loss": [],
         "acc": [],
-        "val_loss1": [],
-        "val_acc1": [],
-        "val_loss2": [],
-        "val_acc2": [],
+        "val_loss": [],
+        "val_acc": [],
         "layers": {}
       }
     
@@ -216,6 +207,7 @@ class MLP(Model, Train):
     self.layers = [
       Dense(self.input_dim, self.h1_dim),
       ReLU(),
+      Dropout(p=0.1),
       Dense(self.h1_dim, self.h2_dim),
       ReLU(),
       Dense(self.h2_dim, self.h3_dim),
@@ -225,7 +217,8 @@ class MLP(Model, Train):
 
     self.loss_layer = SoftmaxCrossEntropy()
 
-  def forward(self, x, y_true_onehot=None, track=False):
+  def forward(self, x, y_true_onehot=None):
+    track = self.training
     activations = [] if track else None
     #forward through the layers
     for layer in self.layers:
@@ -242,6 +235,7 @@ class MLP(Model, Train):
     return loss, logits
   
   def backward(self, track=False):
+    track = self.training
     #start from dL/dlogits
     dout = self.loss_layer.backward()
     #backprop through the layers in reverse
@@ -249,13 +243,13 @@ class MLP(Model, Train):
       dout = layer.backward(dout, track=track)
   
   def predict(self, x):
-    _, logits = self.forward(x, y_true_onehot=None, track=False)
+    _, logits = self.forward(x, y_true_onehot=None)
     return np.argmax(logits, axis=1)
   
   def get_layers(self):
     return self.layers
 
-class CNN(Model, Train):
+class CNN(Model):
   def __init__(self):
     self.type = 'cnn'
     self.c1out = 16
@@ -266,6 +260,7 @@ class CNN(Model, Train):
       Conv2D(1, self.c1out, 3, stride=1, padding=1), 
       BatchNorm2D(self.c1out),
       ReLU(),
+      Dropout(p=0.1, mode="channel"),
       MaxPool2D(2, 2),
 
       Conv2D(self.c1out, self.c2out, 3, stride=1, padding=1),
@@ -283,14 +278,13 @@ class CNN(Model, Train):
     self.history = {
         "loss": [],
         "acc": [],
-        "val_loss1": [],
-        "val_acc1": [],
-        "val_loss2": [],
-        "val_acc2": [],
+        "val_loss": [],
+        "val_acc": [],
         "layers": {}
       }
 
-  def forward(self, x, y_true_onehot=None, track=False):
+  def forward(self, x, y_true_onehot=None):
+    track = self.training
     activations = [] if track else None
     #forward through the layers
     for layer in self.layers:
@@ -307,6 +301,7 @@ class CNN(Model, Train):
     return loss, logits
   
   def backward(self, track=False):
+    track = self.training
     #start from dL/dlogits
     dout = self.loss_layer.backward()
     #backprop through the layers in reverse
@@ -314,7 +309,7 @@ class CNN(Model, Train):
       dout = layer.backward(dout, track=track)
 
   def predict(self, x):
-    _, logits = self.forward(x, y_true_onehot=None, track=False)
+    _, logits = self.forward(x, y_true_onehot=None)
     return np.argmax(logits, axis=1)
   
   def get_layers(self):

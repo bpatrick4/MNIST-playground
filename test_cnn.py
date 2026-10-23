@@ -11,7 +11,7 @@ test_model = CNN()
 dashboard = DashboardTest(test_model)
 
 #load model weights
-test_model.load(f'weights\weights_cnn\e12\weights_lr0.004_bpe781.25_adam_BN_train50000_validate10000.npz')
+test_model.load(f'weights\weights_cnn\e8\_844.0bpe_lr-0.003_sgd_t-54016_v-5984.npz')
 
 #validate for accuracy on stored weights
 acc = test_model.validate(X_test_small_cnn, Y_test_small_onehot)

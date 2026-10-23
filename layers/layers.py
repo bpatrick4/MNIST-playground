@@ -100,6 +100,92 @@ class ReLU(Layer):
       sparsity = 0.0
     return {"sparsity": sparsity}
 
+class Dropout(Layer):
+    def __init__(self, p=0.5, mode='element', dtype=np.float32):
+        assert 0.0 <= p < 1.0
+        assert mode in ('element', 'channel')
+        self.p = float(p)
+        self.mode = mode
+        self.mask = None
+        self._last_track = None
+        self.dtype = dtype
+
+    def _make_mask_element(self, shape, keep_prob):
+        # boolean -> float mask, then scale (inverted dropout)
+        mask_bool = (np.random.rand(*shape) < keep_prob)
+        return (mask_bool.astype(self.dtype) / keep_prob)
+
+    def forward(self, X, track=False):
+        """
+        X: numpy array
+        track: True for training (dropout active), False for eval
+        """
+        # Ensure X is float dtype for mask math
+        X = X.astype(self.dtype, copy=False)
+
+        if not track or self.p == 0.0:
+            # keep mask None to indicate no dropout was applied
+            self.mask = None
+            self._last_track = False
+            return X
+
+        keep_prob = 1.0 - self.p
+
+        if self.mode == 'element' or X.ndim < 4:
+            self.mask = self._make_mask_element(X.shape, keep_prob)
+        else:
+            # channel-wise dropout for convs: expect (N, C, H, W)
+            if X.ndim != 4:
+                # fallback to element-wise if unexpected shape
+                self.mask = self._make_mask_element(X.shape, keep_prob)
+            else:
+                N, C, H, W = X.shape
+                # create channel mask shape (1, C, 1, 1) and broadcast
+                channel_mask = self._make_mask_element((1, C, 1, 1), keep_prob)
+                # broadcast to (N, C, H, W)
+                self.mask = np.broadcast_to(channel_mask, (N, C, H, W)).astype(self.dtype, copy=False)
+
+        self._last_track = True
+        return X * self.mask
+
+    def backward(self, d_out, track=False):
+        """
+        d_out: gradient from next layer
+        track: must match forward's track flag for correctness
+        """
+        # If forward was run with track=False, mask is None and dropout inactive
+        if not self._last_track and (not track or self.mask is None):
+            return d_out
+
+        # Defensive check: require the same training flag used in forward/backward
+        if track != bool(self._last_track):
+            # It's safer to raise so caller notices mismatch; you can change to fallback behavior if desired
+            raise RuntimeError("Dropout.forward and Dropout.backward called with different track flags")
+
+        # If mask is None (dropout inactive), pass gradient through
+        if self.mask is None:
+            return d_out
+
+        # Ensure dtype alignment
+        return d_out.astype(self.dtype, copy=False) * self.mask
+
+    # compatibility with optimizer loop
+    def get_params(self):
+        return []
+
+    def get_grads(self):
+        return []
+
+    def get_metrics(self):
+        sparsity = None
+        if self.mask is not None:
+            sparsity = float(np.mean(self.mask == 0.0))
+        return {"weight_norm": 0.0, "grad_norm": 0.0, "sparsity": sparsity}
+
+    def clear_mask(self):
+        self.mask = None
+        self._last_track = None
+
 class SoftmaxCrossEntropy(Layer):
   def forward(self, logits, y_true_onehot):
     #logits: (batch, num_classes)
@@ -489,3 +575,4 @@ class Flatten(Layer):
   
   def get_metrics(self):
     return {}
+
