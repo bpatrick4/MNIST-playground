@@ -207,7 +207,7 @@ class MLP(Model):
     self.layers = [
       Dense(self.input_dim, self.h1_dim),
       ReLU(),
-      Dropout(p=0.1),
+      Dropout(mode='element'),
       Dense(self.h1_dim, self.h2_dim),
       ReLU(),
       Dense(self.h2_dim, self.h3_dim),

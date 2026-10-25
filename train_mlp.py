@@ -10,7 +10,7 @@ model = MLP() # training model
 #training inputs
 epochs = 2 ** 3         # range(2, 4)
 batch_size = 2 ** 6     # range(5, 9) number of images per update
-learning_rate = 0.002   # range(0.001, 0.010)
+learning_rate = 0.003   # range(0.001, 0.010)
 l2_lambda = 0.003       # range(0.001, 0.005)
 
 #optimizer inputs
@@ -23,7 +23,7 @@ optimizer = Adam(
   beta2=beta2,
   eps=eps
 )
-#optimizer = SGD(lr=learning_rate)
+optimizer = SGD(lr=learning_rate)
 
 #outputs
 batches_per_epoch = (train_imgs / batch_size)
